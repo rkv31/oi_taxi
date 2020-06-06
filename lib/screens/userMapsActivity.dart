@@ -16,7 +16,9 @@ class _CustomerMapActivityState extends State<CustomerMapActivity> {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider.value(value: UserMapState())],
+      providers: [
+        ChangeNotifierProvider.value(value: UserMapState(context: context))
+      ],
       child: Map(),
     );
   }
@@ -64,7 +66,9 @@ class _MapState extends State<Map> {
               ),
             )
           : Scaffold(
-              appBar: AppBar(),
+              appBar: AppBar(
+                title: Text('Customer Map'),
+              ),
               drawer: SideMenu(),
               body: Builder(
                 builder: (context) => Stack(
@@ -84,7 +88,7 @@ class _MapState extends State<Map> {
                       polylines: userMapState.polyLines,
                     ),
                     Positioned(
-                      top: 50.0,
+                      top: 10.0,
                       right: 15.0,
                       left: 15.0,
                       child: Container(
@@ -123,7 +127,7 @@ class _MapState extends State<Map> {
                       ),
                     ),
                     Positioned(
-                      top: 105.0,
+                      top: 65.0,
                       right: 15.0,
                       left: 15.0,
                       child: Container(

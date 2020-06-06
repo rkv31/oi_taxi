@@ -11,9 +11,12 @@ import 'package:oitaxi/request/google_map_requests.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'dart:math' show cos, sqrt, asin;
 
+import 'package:oitaxi/screens/tripReport.dart';
+
 const apiKey = "AIzaSyCpCmEqTPe2QAMuUvG2zbYgWxMU9ug9kGA";
 
 class UserMapState with ChangeNotifier {
+  final BuildContext context;
   static LatLng _initialPosition;
   LatLng _lastPosition = _initialPosition;
   LatLng _pickUpLocation;
@@ -40,12 +43,14 @@ class UserMapState with ChangeNotifier {
   StreamSubscription _driverSubscription;
   StreamSubscription _driverLocationSubscription;
   StreamSubscription _driverCustomerStream;
+  StreamSubscription _rideDataStream;
   String status;
   String _driverEmail = '';
   bool cancelRideButton = false;
   LatLng destination;
+  DateTime pickUpTime;
 
-  UserMapState() {
+  UserMapState({this.context}) {
     _getUserLocation();
     _loadingInitialPosition();
   }
@@ -150,6 +155,8 @@ class UserMapState with ChangeNotifier {
         .document(_driverEmail)
         .snapshots();
     LatLng driverLocation;
+    final FirebaseUser currentUser = await _firebaseAuth.currentUser();
+    pickUpTime = DateTime.now();
     _driverLocationSubscription =
         stream.listen((DocumentSnapshot driverLocationDocument) {
       if (driverLocationDocument.data != null) {
@@ -169,6 +176,10 @@ class UserMapState with ChangeNotifier {
         if (distance < 100) {
           status = 'Driver arrived at pickup location';
           print(status);
+          _firestore
+              .collection('customerRequest')
+              .document(currentUser.email)
+              .updateData({'pickUpTime': pickUpTime});
         }
         endRide();
         notifyListeners();
@@ -176,7 +187,36 @@ class UserMapState with ChangeNotifier {
     });
   }
 
-  void endRide() {
+  void endRide() async {
+    final pickUpTimestamp = Timestamp.fromMillisecondsSinceEpoch(
+        DateTime.parse(pickUpTime.toString()).millisecondsSinceEpoch);
+    Stream<QuerySnapshot> rideDataStream = _firestore
+        .collection('rides')
+        .where('pickUpTime', isEqualTo: pickUpTimestamp)
+        .snapshots();
+    _rideDataStream = rideDataStream.listen((QuerySnapshot querySnapshot) {
+      if (querySnapshot.documents.length != 0) {
+        print(querySnapshot.documents[0].data);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => TripReport(
+              customerName: querySnapshot.documents[0].data['customerName'],
+              driverName: querySnapshot.documents[0].data['driverName'],
+              carNo: querySnapshot.documents[0].data['carNo'],
+              carModel: querySnapshot.documents[0].data['carModel'],
+              pickUpLocation: querySnapshot.documents[0].data['pickUpLocation'],
+              dropLocation: querySnapshot.documents[0].data['dropLocation'],
+              totalDistance: querySnapshot.documents[0].data['distance'],
+              fare: querySnapshot.documents[0].data['fare'],
+              pickUpTime:
+                  querySnapshot.documents[0].data['pickUpTime'].toDate(),
+              dropTime: querySnapshot.documents[0].data['dropTime'].toDate(),
+            ),
+          ),
+        );
+        _rideDataStream.cancel();
+      }
+    });
     Stream<DocumentSnapshot> stream = _firestore
         .collection('driverCustomerCommon')
         .document(_driverEmail)

@@ -1,13 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:oitaxi/models/customer.dart';
-import 'package:oitaxi/services/auth.dart';
-import 'package:oitaxi/screens/login.dart';
 import 'package:oitaxi/services/database.dart';
-import 'package:oitaxi/shared/loading.dart';
-import 'package:provider/provider.dart';
-import 'package:oitaxi/screens/userMapsActivity.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -15,99 +10,185 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final AuthService _auth = AuthService();
-  String email;
   @override
   Widget build(BuildContext context) {
-    email = Provider.of<String>(context);
-    return StreamBuilder<Customer>(
-      stream: DataBaseService(email: email).customerData,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          Customer userData = snapshot.data;
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(userData.displayName),
-              automaticallyImplyLeading: false,
-              actions: <Widget>[
-                IconButton(
-                  icon: Icon(
-                    FontAwesomeIcons.signOutAlt,
-                    size: 20.0,
-                    color: Colors.white,
-                  ),
-                  onPressed: () async {
-                    await _auth.signOutGoogle();
-                    print('signed out');
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) => Login(),
-                      ),
-                    );
-                  },
-                )
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Profile'),
+      ),
+      body: FutureBuilder(
+        future: getUserInfo(),
+        builder: (context, userSnap) {
+          if (userSnap.connectionState == ConnectionState.none ||
+              userSnap.hasData == false)
+            return Container(
+              child: Center(
+                child: Text(
+                  'User details not available',
+                  style: TextStyle(color: Colors.black26, fontSize: 20),
+                ),
+              ),
+            );
+          return Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                CircleAvatar(
+                  backgroundImage: NetworkImage(userSnap.data['photoUrl']),
+                  radius: 50.0,
+                ),
+                SizedBox(height: 50.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      'Name',
+                      style: TextStyle(fontSize: 20),
+                      textAlign: TextAlign.left,
+                    ),
+                    Text(
+                      userSnap.data['name'],
+                      style: TextStyle(fontSize: 20),
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.left,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      'Email',
+                      style: TextStyle(fontSize: 20),
+                      textAlign: TextAlign.left,
+                    ),
+                    Text(
+                      userSnap.data['email'],
+                      style: TextStyle(fontSize: 20),
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.left,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      'Phone Number',
+                      style: TextStyle(fontSize: 20),
+                      textAlign: TextAlign.left,
+                    ),
+                    Text(
+                      userSnap.data['phoneNumber'],
+                      style: TextStyle(fontSize: 20),
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.left,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      'Gender',
+                      style: TextStyle(fontSize: 20),
+                      textAlign: TextAlign.left,
+                    ),
+                    Text(
+                      userSnap.data['gender'],
+                      style: TextStyle(fontSize: 20),
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.left,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      'Address',
+                      style: TextStyle(fontSize: 20),
+                      textAlign: TextAlign.left,
+                    ),
+                    Text(
+                      userSnap.data['address'],
+                      maxLines: 3,
+                      softWrap: true,
+                      style: TextStyle(fontSize: 20),
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.left,
+                    ),
+                  ],
+                ),
+                (DataBaseService.isDriver)
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                'Car Model',
+                                style: TextStyle(fontSize: 20),
+                                textAlign: TextAlign.left,
+                              ),
+                              Text(
+                                userSnap.data['carModel'],
+                                style: TextStyle(fontSize: 20),
+                                textDirection: TextDirection.ltr,
+                                textAlign: TextAlign.left,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                'Car Number',
+                                style: TextStyle(fontSize: 20),
+                                textAlign: TextAlign.left,
+                              ),
+                              Text(
+                                userSnap.data['carNo'],
+                                style: TextStyle(fontSize: 20),
+                                textDirection: TextDirection.ltr,
+                                textAlign: TextAlign.left,
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : Container(),
               ],
             ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  CircleAvatar(
-                    backgroundImage: NetworkImage(userData.photoUrl),
-                    radius: 50.0,
-                  ),
-                  SizedBox(
-                    height: 10.0,
-                  ),
-                  Text(
-                    "Name : " + userData.displayName,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        fontSize: 20.0),
-                  ),
-                  Text(
-                    "Email : " + userData.email,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        fontSize: 20.0),
-                  ),
-                  Text(
-                    "UId : " + userData.uid,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        fontSize: 20.0),
-                  ),
-                  Text(
-                    "Phone No. : " + userData.phoneNumber,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        fontSize: 20.0),
-                  ),
-                  FlatButton(
-                    child: Text(
-                      'Continue to Maps',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => CustomerMapActivity()));
-                    },
-                    color: Colors.blue,
-                  )
-                ],
-              ),
-            ),
           );
-        } else {
-          return Loading();
-        }
-      },
+        },
+      ),
     );
+  }
+
+  Future getUserInfo() async {
+    DocumentSnapshot documentSnapshot;
+    final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+    final FirebaseUser currentUser = await firebaseAuth.currentUser();
+    if (DataBaseService.isDriver == false)
+      documentSnapshot = await Firestore.instance
+          .collection('customer')
+          .document(currentUser.email)
+          .get();
+    else
+      documentSnapshot = await Firestore.instance
+          .collection('driver')
+          .document(currentUser.email)
+          .get();
+    return documentSnapshot;
   }
 }

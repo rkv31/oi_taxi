@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:oitaxi/screens/sideMenu.dart';
-import 'package:oitaxi/services/auth.dart';
 import 'package:oitaxi/shared/loading.dart';
 import 'package:oitaxi/states/driverMapSate.dart';
 import 'package:provider/provider.dart';
@@ -66,7 +65,9 @@ class _MapState extends State<Map> {
               ),
             )
           : Scaffold(
-              appBar: AppBar(),
+              appBar: AppBar(
+                title: Text('Driver Map'),
+              ),
               drawer: SideMenu(),
               body: Builder(
                 builder: (context) => Stack(

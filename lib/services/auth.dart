@@ -76,8 +76,7 @@ class AuthService {
 
   signIn(AuthCredential authCreds, BuildContext context) async {
     FirebaseUser currentUser = await firebaseAuth.currentUser();
-    AuthResult result = await currentUser.linkWithCredential(authCreds);
-//    currentUser = result.user;
+    await currentUser.linkWithCredential(authCreds);
     if (currentUser != null) {
       Navigator.pushAndRemoveUntil(
           context,

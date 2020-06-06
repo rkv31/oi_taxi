@@ -10,6 +10,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:math' show cos, sqrt, asin;
 
+import 'package:oitaxi/screens/tripReport.dart';
+
 class DriverMapState with ChangeNotifier {
   final BuildContext context;
   static LatLng _initialPosition;
@@ -31,6 +33,8 @@ class DriverMapState with ChangeNotifier {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   LatLng pickupLocation;
   LatLng dropLocation;
+  DateTime dropTime;
+  DateTime pickUpTime;
   bool endTripButton = false;
 
   DriverMapState({this.context}) {
@@ -59,6 +63,7 @@ class DriverMapState with ChangeNotifier {
         dropLocation.longitude);
     double pricePerKilometer = 17.0;
     double finalFare = distance * pricePerKilometer;
+    dropTime = DateTime.now();
     _firestore.collection('rides').add({
       'customerEmail': _customerEmail,
       'driverEmail': currentUser.email,
@@ -71,8 +76,26 @@ class DriverMapState with ChangeNotifier {
       'pickUpLocation': pickUpPlaceName,
       'dropLocation': dropPlaceName,
       'distance': distance,
-      'fare': finalFare
+      'fare': finalFare,
+      'pickUpTime': pickUpTime,
+      'dropTime': dropTime
     });
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => TripReport(
+          customerName: customerDocumentSnapshot.data['name'],
+          driverName: driverDocumentSnapshot.data['name'],
+          carNo: driverDocumentSnapshot.data['carNo'],
+          carModel: driverDocumentSnapshot.data['carModel'],
+          pickUpLocation: pickUpPlaceName,
+          dropLocation: dropPlaceName,
+          totalDistance: distance,
+          fare: finalFare,
+          pickUpTime: pickUpTime,
+          dropTime: dropTime,
+        ),
+      ),
+    );
     endTrip();
   }
 
@@ -126,6 +149,8 @@ class DriverMapState with ChangeNotifier {
             assignedCustomerDocument.data['pickUplocation']['geopoint'];
         GeoPoint dropPoint =
             assignedCustomerDocument.data['droplocation']['geopoint'];
+        if (assignedCustomerDocument.data.containsKey('pickUpTime'))
+          pickUpTime = (assignedCustomerDocument.data['pickUpTime']).toDate();
         pickupLocation = LatLng(pickUpPoint.latitude, pickUpPoint.longitude);
         dropLocation = LatLng(dropPoint.latitude, dropPoint.longitude);
         _addMarker(pickupLocation, dropLocation);
@@ -173,7 +198,6 @@ class DriverMapState with ChangeNotifier {
     if (_customerAssignedStream != null) {
       _customerAssignedStream.cancel();
     }
-    notifyListeners();
   }
 
   void removeAvailableDriver() async {

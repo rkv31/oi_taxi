@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:oitaxi/screens/ProfileScreen.dart';
 import 'package:oitaxi/screens/about.dart';
+import 'package:oitaxi/screens/allTrips.dart';
 import 'package:oitaxi/screens/login.dart';
 import 'package:oitaxi/services/auth.dart';
 import 'package:oitaxi/services/database.dart';
@@ -35,7 +37,7 @@ class _SideMenuState extends State<SideMenu> {
                         radius: 50.0,
                       ),
                     ),
-                    _sharedWidgets(),
+                    _sharedWidgets(context),
                   ],
                 ),
               );
@@ -59,7 +61,7 @@ class _SideMenuState extends State<SideMenu> {
                         radius: 50.0,
                       ),
                     ),
-                    _sharedWidgets(),
+                    _sharedWidgets(context),
                   ],
                 ),
               );
@@ -68,16 +70,22 @@ class _SideMenuState extends State<SideMenu> {
           });
   }
 
-  Widget _sharedWidgets() {
+  Widget _sharedWidgets(BuildContext context) {
     return Column(
       children: <Widget>[
         ListTile(
           title: Text('Your Rides'),
-          onTap: () {},
+          onTap: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => AllTrips()));
+          },
         ),
         ListTile(
           title: Text('Profile'),
-          onTap: () {},
+          onTap: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => ProfileScreen()));
+          },
         ),
         ListTile(
           title: Text('Logout'),
